@@ -1,0 +1,5 @@
+#!/bin/bash
+
+find /media/disk -iname \*.dll
+find /media/disk -iname \*.exe
+find /media/disk -iname autorun.inf

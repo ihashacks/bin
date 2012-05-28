@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+#	20080616 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Displays all SysV init compatible symlinks for the passed service name
+#
+
+INITPREFIX=/etc
+
+usage()
+{
+	echo "Usage: `basename $0` <service>"
+	exit 1
+}
+
+# Make sure one and only one service was passed to STDIN
+if [ ${#@} != 1 ]; then
+	usage
+fi
+
+SVC=$1
+
+find $INITPREFIX/rc[0-6].d/ | grep $SVC | \
+	xargs -i -- ls -l {} | \
+	awk ' { print $8, $9, $10 } '

@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+#	20080910 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Quick ARP scan of a given IP range
+#
+
+#
+# If you see this, you oopsied!
+#
+usage()
+{
+	echo "Usage: `basename $0` <interface> <start-stop range>"
+	exit 1
+
+}
+
+#
+# Checks to make sure that a valid device (unfortunately hard-coded as eth*
+# is specified and some form of range.
+# Error handling for interface status handled by external ip scan tool
+#
+if [ ${#@} -lt 2 ] ; then #|| [[ $1 != eth* ]]; then
+	usage
+fi
+
+#
+# Fuckin....do it!
+#
+sudo /home/brandon/bin/thcrut -i $1 -l 5000 arp $2 | \
+	sed -e ' s/^Host:\ // ' | \
+	sort -g -t \. --key=4

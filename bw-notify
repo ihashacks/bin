@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+#	Written 20081122 by Brandon Pierce <brandon@ihashacks.com>
+#
+#	Checks bandwidth usage on NomadISP. Will only test while actually using
+#	the service.
+#
+
+echo "Testing connected ISP"
+iwconfig wlan0 | grep -o www\.nomadisp\.com
+if [ $? -eq 1 ]; then
+	echo "No need to check bandwidth"
+	exit 1
+fi
+
+echo "Creating tmp file"
+BWTMP=`mktemp`
+
+echo "Defining message parameters"
+MSG="notify-send -t 4000"
+INFO="/usr/share/pixmaps/other/GNOME-Info.png"
+WARN1="/usr/share/pixmaps/other/Dialog-warning4.png"
+WARN2="/usr/share/pixmaps/other/Dialog-Warning3.png"
+ERR="/usr/share/pixmaps/other/DialogError.png"
+
+echo "Requesting bandwidth report"
+nomadbw > $BWTMP
+
+grep Receive $BWTMP
+if [ $? -eq 0 ]; then
+	$MSG -i $ERR "Nomad Error Encountered" "`cat $BWTMP`"
+fi
+
+echo "Determining bandwidth values"
+
+	
+
+UPBW=`grep -oe '[0-9]*\.' $BWTMP  | sed ' s/\.//g ' | head -1`
+DOWNBW=`grep -oe '[0-9]*\.' $BWTMP | sed ' s/\.//g ' | tail -1`
+TOTBW=$(($UPBW+$DOWNBW))
+
+
+#
+# Quick message example:
+#
+#	notify-send --icon ${ICON} "${TITLE}" "${MESSAGE}"
+#
+
+echo "Testing quota usage"
+
+if [ $TOTBW -ge 99 ]; then
+	$MSG -i $ERR "Bandwidth Quota Reached" "`cat $BWTMP`"
+elif [ $TOTBW -ge 75 ]; then
+	$MSG -i $WARN2 "Bandwidth Quota Nearing" "`cat $BWTMP`"
+elif [ $TOTBW -ge 50 ]; then
+	$MSG -i $WARN1 "Bandwidth Quota Halfway" "`cat $BWTMP`"
+elif [ $TOTBW -ge 25 ]; then
+	$MSG -i $INFO "Bandwidth Notification" "`cat $BWTMP`"
+else
+	echo "No notification necessary"
+fi
+
+echo "Deleting tmp file"
+rm $BWTMP
+exit 0

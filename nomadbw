@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+#	20081116 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Retrieves current NomadISP bandwidth usage
+#
+
+
+#
+# Grab our current MAC and ensure that we have it in uppercase
+#
+MAC=`/sbin/ifconfig wlan0 | grep HWaddr | awk ' { print $5 } ' | tr a-z A-Z`
+
+#
+# As best as I can tell, this is the MAC address of our NomadISP node
+#
+PRNTMAC="00:00:24:C4:9C:B0"
+
+#
+# Set target to pull report from
+#
+HOST="https://admin.nomadisp.com"
+URL="admin/index2.php"
+URLPARAM="module=view_bw&usr_mac=$MAC&prnt_mac=$PRNTMAC"
+
+#
+# Concatenate all above variables to one full path and pass it to links
+#
+RQST=$HOST/$URL?$URLPARAM
+/usr/bin/links -receive-timeout 10 -retries 1 -dump "$RQST" | tail -n 4 | sed '$!N;s/\n/ /'

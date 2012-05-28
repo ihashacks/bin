@@ -1,0 +1,5 @@
+#!/bin/bash
+
+DATADIR=$HOME/Music/direcord
+wget --no-proxy --output-document=$DATADIR/stream-`date +%Y%m%d-%H_%M_%S`.mp3 \
+	http://207.200.96.229:8030/

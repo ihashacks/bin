@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+#	20081116 Brandon Pierce <brandon@ihashacks.com>
+#
+
+OUTDIR=/backup/apt
+
+#
+# Backup
+#
+NOW=`now`
+echo "Backing up packages to $OUTDIR/packages-$NOW.pkg"
+sudo /usr/bin/dpkg --get-selections > $OUTDIR/packages-$NOW.pkg
+
+#
+# Restore
+#
+# sudo /usr/bin/dpkg --set-selections < $OUTDIR/FIXME.pkg && /usr/bin/apt-get dselect-upgrade

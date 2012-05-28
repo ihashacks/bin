@@ -1,0 +1,5 @@
+#!/bin/bash
+bkhive SYSTEM temp.txt
+samdump2 SAM temp.txt > hashes.txt
+rm temp.txt
+cat hashes.txt

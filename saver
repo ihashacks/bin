@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+#       Written 20040624 by Brandon Pierce <brandon@ihashacks.com>
+#       
+#	Uses SSH to connect to machines in the DMZ for simple backup 
+#
+#	20040701 - added -q to SSHOPT to suppress X11 warnings
+#		 - redirect stdout to the log file
+#		 - added cleanup for old backup files
+
+TODAY=`date +%Y%m%d`
+YESTERDAY=`expr $TODAY - 1`
+SSH=/usr/bin/ssh
+SSHOPT="-q"
+#SCP=/usr/bin/scp
+REMOTE_USER=root
+REMOTE_TAROPT="--exclude-from /etc/saver_exclusions -zclf"
+LOGDIR=/tmp/dmzsaver
+OUTDIR=/usr/local/dmzsaver
+LOGRECIP=dba@domain.com
+
+# Un-comment for debugging
+#
+# set -x
+
+#
+# Server1
+#
+
+# Remove logs more than seven days old
+echo "Cleaning up old logs"
+find $LOGDIR/*.log -ctime +7 | xargs /bin/rm -f {}
+
+# Remove backups more than seven days old
+echo "Cleaning up old backups"
+find $OUTDIR/*.gz -ctime +5 | xargs /bin/rm -f {}
+#/bin/rm -f $OUTDIR/*.gz
+
+# Back it up
+echo -e "Started on $TODAY at `date +%T`\nCreating tar files for server1:" > $LOGDIR/server1-$TODAY.log
+# huh?for fs in {/asdf} ; do \
+for fs in {/,/opt,/usr,/var} ; do \
+        echo -e "\t$fs at $OUTDIR/server1-$TODAY`echo $fs | sed -e 's/^\/$/-slash/ ; s/\//-/'`.tar.gz" ; \
+        $SSH $SSHOPT -l $REMOTE_USER server1 "/bin/tar $REMOTE_TAROPT - $fs" > \
+        $OUTDIR/server1-$TODAY`echo $fs | sed -e 's/^\/$/-slash/ ; s/\//-/'`.tar.gz ; \
+done >> $LOGDIR/server1-$TODAY.log 2>&1
+echo "Finished with server1 on `date "+%Y%m%d at %T"`" >> $LOGDIR/server1-$TODAY.log
+
+# Old messy code:
+#echo "Performing backup for server1:"
+#for fs in {' ',opt,usr,var} ; do \
+#	echo -e -n "\t/Creating tar file for  filesystem: $fs ..." ; \
+#	$SSH -l $REMOTE_USER server1 \
+#	"/bin/rm -f /opt/backup/$YESTERDAY-$fs.tar.gz ; /bin/tar zcfl /opt/backup/$TODAY-$fs.tar.gz /$fs" ; \
+#	$SCP $REMOTE_USER@server1:/opt/backup/$TODAY-$fs.tar.gz \
+#	/home/backup/server1/$TODAY-$fs.tar.gz ; \
+#	echo -e "\tCopied tar file for /$fs to /home/backup/server1/$TODAY-$fs.tar.gz" ; \
+#done > $LOGDIR/server1-$TODAY.log
+# EO messy code
+
+# Create the messages to be mailed
+rm -f $LOGDIR/*.mail
+for log in `ls $LOGDIR/*-$TODAY.log` ; do \
+	host=`echo $log | sed -e 's/\/tmp\/dmzsaver\///; s/-[0-9]*\.log//'` ; \
+	echo "Results for $host" > $LOGDIR/$host.mail ; \
+	cat $log >> $LOGDIR/$host.mail ; \
+done
+
+echo -e "\n\nSize for dumps are as follows\n" >> $LOGDIR/$host.mail
+
+#for dump in `ls $OUTDIR/$TODAY*.gz` ; do \
+#	echo -e "\t `ls -sh $dump`" >> $LOGDIR/$host.mail ; \
+#done
+
+echo -e "\t `ls -sh $OUTDIR/$host*$TODAY*.gz`" >> $LOGDIR/$HOST.mail
+
+# Mail the results
+cat $LOGDIR/*.mail | Mail -s "Server1 DMZ Saver Report for $TODAY" $LOGRECIP

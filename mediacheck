@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+#	20081106 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Uses cat to perform media check for a mounted device.
+#	This would be used in the event that an md5sum is unavailable.
+#	The media must already be mounted.
+#
+
+usage()
+{
+	echo "Usage: `basename $0` <mount point>"
+	exit 1
+}
+
+#
+# Parameter validation:
+#	Number expected: 1
+#	Expects: device mount point
+#
+if [ ${#@} -ne 1]; then
+	usage
+fi
+
+TARGET=$1
+
+find $TARGET -type f -exec cat {} \; > /dev/null

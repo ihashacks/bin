@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+#	Load my evil twin.
+#
+
+sudo service vmware status &>/dev/null || \
+	sudo service vmware start && vmplayer $HOME/.virt/gemini/gemini.vmx

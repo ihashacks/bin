@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+#	20081028 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Creates a snapshot of TabMixPlus session
+#
+
+MOZPATH=$HOME/.mozilla
+MOZPROF=`grep ^Path $MOZPATH/profiles.ini | awk -F= ' { print $2 } '`
+
+echo "Backing up session for $MOZPROF"
+cd $MOZPATH/firefox/$MOZPROF
+cp session.rdf session-`now`.rdf

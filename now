@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+#	20080611-01:42:21
+
+#if [ $1 -eq "-d" ]; then
+#	date +%Y%m%d
+#	exit 0
+#else
+	date +%Y%m%d-%H:%M:%S
+#	exit 0
+#fi

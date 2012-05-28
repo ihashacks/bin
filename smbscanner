@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+#####
+# Simple SMB-Share Scanner
+#
+# You need nbtscan and smbclient!
+# nbtscan:
+# http://www.inetcat.org/software/nbtscan-1.0.2.tar.gz
+# smbclient:
+# ftp://ftp.samba.org/pub/samba/samba-latest.tar.gz
+#
+#
+# Martin J. Muench
+# http://www.codito.de
+#####
+
+###
+# If 'which' does not work because a prog is not located anywhere in $PATH,
+# just set it manually here
+###
+chomp($NBTSCAN=`which nbtscan`);
+chomp($SMBCLIENT=`which smbclient`);
+###
+
+
+if (-e $SMBCLIENT && -e $NBTSCAN) {
+
+  if ($#ARGV < 0) { &usage; exit(0); }
+
+  print "\nSMB-Scanner by Martin J. Muench <mjm\@codito.de>\n\nScanning...\n";
+
+  $iprange=$ARGV[0];
+  @server=`$NBTSCAN -s : $iprange`;
+  $ZEICHEN='-a-zA-Z0-9-\:\.';
+
+  foreach $line (@server) { 
+    $line=~s/[^$ZEICHEN]//go; 
+    @part=split(/:/, $line);
+    if ($part[1] ne "<unknown>") { &sharesearch; }
+  }
+
+}
+
+else {
+  print "You need smbclient and nbtscan, look at heaer in $0 for urls!\nexiting...\n";
+  exit(-1);
+}
+
+exit(0);
+
+sub sharesearch { 
+
+  if ($part[3] ne "<unknown>") {
+    @shares=`$SMBCLIENT -I $part[0] -L $part[1] -N -U $part[3]`; 
+  }
+  else {
+    @shares=`$SMBCLIENT -I $part[0] -L $part[1] -N`;
+  }
+
+  foreach $grep (@shares) {
+    if ($grep =~ m/Disk/) {
+
+	$grep =~ s/Disk/:/g; 
+	$grep =~s/[^$ZEICHEN]//go;
+
+	@share=split(/:/, $grep);
+	$sharelist .= "$share[0] " if ($share[0]);
+    }
+  }
+
+  print "\nhost: $part[0]\nname: $part[1]\nshares: $sharelist\n" if ($sharelist);
+  undef($sharelist);
+}
+
+sub usage {
+print qq~
+Simple SMB Scanner by mjm <mjm\@codito.de>
+
+Usage: $0 <iprange>
+
+<iprange> = Single IP: xxx.xxx.xxx.xxx
+	    IP-range: xxx.xxx.xxx.xxx/xx or xxx.xxx.xxx.xxx-xxx
+
+~;
+}

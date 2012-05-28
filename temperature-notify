@@ -1,0 +1,23 @@
+#!/bin/bash
+CPUTEMP=`cat /proc/acpi/thermal_zone/THM0/temperature | awk -F " " '{print $2}'`
+GFXTEMP=`cat /proc/acpi/thermal_zone/TZ2/temperature | awk -F " " '{print $2}'`
+BATTEMP=`cat /proc/acpi/thermal_zone/TZ3/temperature | awk -F " " '{print $2}'`
+HDDTEMP=`nc localhost 7634 | cut -f 4 -d "|"`
+
+if [ $CPUTEMP -gt 50 ]; then
+	CPUCOLOR="red"
+elif [ $CPUTEMP -gt 30 ]; then
+	CPUCOLOR="yellow"
+else
+	CPUCOLOR="green"
+fi
+
+ICON="/usr/share/pixmaps/sensors-applet/generic-temp-icon.png"
+TYPE="device"
+TITLE="Temperature status"
+MESSAGE="	<b>Processor:</b>		${CPUTEMP}°C
+	<b>Graphics card:</b>	${GFXTEMP}°C
+	<b>Battery:</b>		${BATTEMP}°C
+	<b>Harddrive:</b>		${HDDTEMP}°C"
+
+notify-send --icon ${ICON} "${TITLE}" "${MESSAGE}"

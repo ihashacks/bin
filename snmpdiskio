@@ -1,0 +1,106 @@
+#!/bin/bash
+# $Id: snmpdiskio,v 1.5 2008/01/31 21:19:50 dverlaeckt Exp $
+# snmpdiskio v0.9.6 (c) 2008 Dieter Verlaeckt <dieter.verlaeckt@gmail.com>
+# snmpdiskio v0.9.5 (c) 2007 Pablo Destefanis <pdestefanis@gmail.com>
+# snmpdiskio v0.9.4 (c) 2006 Mikael Fridh <mikael@meanstreak.se>
+
+# Fields in /proc/partitions (kernel 2.4)
+# major minor #blocks name rio rmerge rsect ruse wio wmerge wsect wuse running use aveq
+
+# Fields in /proc/diskstats (kernel 2.6) for disks (i.e. hda)
+# major minor name rio rmerge rsect ruse wio wmerge wsect wuse running use aveq
+
+# Fields in /proc/diskstats (kernel 2.6) for partitions (i.e. hda1)
+# major minor name rio rsect wio wsect
+
+# InBlocks = sectors written to disk
+# OutBlocks = sectors read from disk
+
+# Set default procfile for kernel 2.4
+PROCFILE="/proc/partitions"
+MODE="linux24"
+
+# Probably kernel 2.6:
+if [ -f /proc/diskstats ]; then
+    PROCFILE=/proc/diskstats
+    MODE="linux26"
+fi
+
+
+function hdNum()
+{
+        awk ' BEGIN { num=0 } $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ { num++ } END { print num } ' $PROCFILE
+}
+
+function hdIndex()
+{
+        awk ' BEGIN { num=0 } $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ { num++; print num } ' $PROCFILE
+}
+
+function hdDescr()
+{
+        if [ "$MODE" = "linux26" ]; then
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ { printf "%s\n", $3 }' $PROCFILE
+        else
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ { printf "%s\n", $4 }' $PROCFILE
+        fi
+}
+
+function hdInBlocks()
+{
+        if [ "$MODE" = "linux26" ]; then
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 7 { printf "%.0f\n", $7 * 512 }
+                      $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 14 { printf "%.0f\n", $10 * 512 } ' $PROCFILE
+        else
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 15 { printf "%.0f\n", $11 * 512 } ' $PROCFILE
+        fi
+}
+
+function hdOutBlocks()
+{
+        if [ "$MODE" = "linux26" ]; then
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 7 { printf "%.0f\n", $5 * 512 }
+                      $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 14 { printf "%.0f\n", $6 * 512 } ' $PROCFILE
+        else
+                awk ' $1 ~ /[0-9]+/ && $2 ~ /[0-9]+/ && NF == 15 { printf "%.0f\n", $7 * 512 } ' $PROCFILE
+        fi
+}
+
+function usage()
+{
+        cat <<-EOUSAGE
+Usage: $0 <hdNum|hdIndex|hdDescr|hdInBlocks|hdOutBlocks>
+EOUSAGE
+}
+
+if [ 1 -ne $# ]; then
+        usage
+        exit 1
+fi
+
+case $1 in
+        hdNum|hdIndex|hdDescr|hdInBlocks|hdOutBlocks)
+                $1
+        ;;
+        'hdNum')
+                hdNum
+        ;;
+        'hdIndex')
+                hdIndex
+        ;;
+        'hdDescr')
+                hdDescr
+        ;;
+        'hdInBlocks')
+                hdInBlocks
+        ;;
+        'hdOutBlocks')
+                hdOutBlocks
+        ;;
+        *)
+                usage
+                exit 1
+        ;;
+esac
+
+exit 0 

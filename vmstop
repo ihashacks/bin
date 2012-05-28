@@ -1,0 +1,3 @@
+#!/bin/bash
+
+vmrun -T server -h https://endeavor.skynet.local:8333/sdk -u brandon -p '' stop "$1"

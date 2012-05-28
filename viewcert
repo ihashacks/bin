@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#	Connects to ssl server and pulls certificate information.
+#
+
+SSL=`which openssl`
+
+$SSL s_client -connect $1

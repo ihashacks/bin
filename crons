@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+#		20080611 Brandon Pierce <brandon@ihashacks.com>
+#
+#		Dumps the crontab entries for each user to /tmp.
+#
+
+
+for i in `awk -F: ' { print $1 } ' /etc/passwd | sort ` ; \
+	do echo "cron for user: $i" ; \
+	sudo crontab -l -u $i ; \
+done > \
+/tmp/`hostname -s`-crons.txt

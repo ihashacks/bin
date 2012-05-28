@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+#	Written 20041213 by Brandon Pierce <brandon@ihashacks.com>
+#
+#       Takes an input URL and expected result and sets exit \
+#	code accordingly
+#
+#	Modifications:
+#	20050304 by Brandon Pierce
+#	- Set output to include actual result searched for next to status
+
+# Uncomment for debugging
+#set -x
+
+GET="/usr/bin/lwp-request"
+
+usage()
+{
+	echo "Usage: `basename $0` <url> <match>"
+	exit 1
+}
+
+# We need to have two parameters and the first one must begin with http://
+if [ ${#@} -lt 2 ] || [ `echo $1 | sed -e'/^http\:\/\/.*\..*$/p' | wc -l` -lt 2 ]; then
+	usage
+fi
+
+#HOST=`echo $1 | sed -e 's/^http\:\/\///; s/\/.*//'`
+
+# If the match is found, the return code is 0, otherwise puke
+$GET -t 1m "$1" | grep -q -o -i "$2"
+
+# check the return card from the grep
+if [ "$?" -eq 0 ]; then
+	echo "Result found  - $2"
+	exit 0
+else
+	echo "Result not found  - $2"
+	exit 2
+fi

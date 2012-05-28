@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+#	20080629	Brandon Pierce <brandon@ihashacks.com>
+#
+#		Displays symlinks for SYSV style init scripts
+#
+
+usage() {
+		echo "Usage: `basename $0` <service>"
+		exit 1
+}
+
+if [ ${#@} != 1 ] ; then
+		usage
+fi
+
+find /etc/rc[0-6].d/ | grep $1 | xargs ls -l

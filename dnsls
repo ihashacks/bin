@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+#	20081106 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Performs a quick DNS audit for common host types and stores them in
+#	corresponding files
+#
+
+usage()
+{
+	echo "Usage: `basename $0` <target domain>"
+	exit 1
+}
+
+#
+# We are only expecting one single parameter, a domain
+#
+if [ ${#@} -ne 1 ]; then
+	usage
+fi
+
+TARGET=$1
+
+#
+# Define DNS query types
+#
+QRYTYPE="a mx ns cname"
+
+for qry in $QRYTYPE ; do \
+	/usr/bin/host -v -t $qry $TARGET > $TARGET\_$qry\.txt ; \
+done
+
+#
+# I would like to implement a means to only dump on success.
+# Maybe some other time.
+#
+#for qry in $QRYTYPE ; do \
+#	/usr/bin/host -v -t $qry $TARGET > $TARGET\_$qry\.txt ; \
+#	if [ "$?" -eq 0 ]; then
+#		echo "$TARGET\_$qry\.txt created"
+#	else
+#		echo "Error obtaining $qry for $TARGET"
+#	fi
+#done

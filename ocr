@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#	20081213 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Converts a JPG to OCR text
+#
+
+djpeg -gray $1 | gocr -i -

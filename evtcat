@@ -1,0 +1,215 @@
+#!/usr/bin/perl -w 
+
+#	This script tries to parse MS EVT event logs files
+#	Try -h to get some help
+
+
+#	Copyright (C) Monniez Christophe
+#
+#	This program is free software; you can redistribute it and/or
+#	modify it under the terms of the GNU General Public License
+#	as published by the Free Software Foundation; either version 2
+#	of the License, or (at your option) any later version.
+
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+
+#	You should have received a copy of the GNU General Public License
+#	along with this program; if not, write to the Free Software
+#	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+# VERSION 1.0 Feb 2005
+
+
+
+sub usage
+{
+	print "\nUsage :\t$0 [-d] [-l] [-u] [-h] file\n";
+	print "\t\t-d : show some ugly debug informations\n";
+	print "\t\t-l : Use localt time rather than the GMT\n";
+	print "\t\t-u : output the strings with the internal file unicode\n";
+	print "\t\t-h : Show this help message\n";
+	print "\t\tfile : The evt file you want to analyze\n";
+	print "\n\n";
+	exit 1;
+}
+
+#routine de recherche de la signature des record dans le fichier
+sub signature_search
+{
+	(my $fichier, my $debug) = @_;
+	#On recherche le premier record (j'arrive pas à décoder le header de ce foutu fichier)
+	my $nb_read;
+	my $dummy="";
+	while ($dummy ne "LfLe")
+	{
+		$nb_read=read $fichier, $dummy,4;
+		if ($nb_read==0)
+		{
+			die("End of file reached.\nProbably empty.\nTry strings to extract strings from file\n");
+		}
+	}
+	seek $fichier,-8,1;
+	if ($debug)
+	{
+		print "Start position : " , tell $fichier , "\n";
+	}
+}
+
+# pas trop besoin de décrire explode
+# on fait juste que lire la structure du record
+# le premier paramaètre de explode est la première partie du record
+# la partie fice en fait
+# le deuxième est le handle du fichier
+# le troisième est la longeur restante du record
+# le quatrième sert au debogage
+# le cinquième indique le time a utiliser GMT ou local
+sub explode
+{
+	(my $champ,my $fichier , my $longeur, my $debug , my $localtime)=@_;
+	(my $reserved, my $record_nb , my $time_gen , my $time_writ , my $event_id , my $event_type , my $nb_strings , my $evt_category , my $reserved_flag , my $cl_record , my $string_offset , my $SID_leng , my $SID_offset , my $data_len , my $data_offset ) = unpack "LLLLLSSSSLLLLLL" , $champ;
+	#on vérifie que le header du record est correct, sinon, ce n'est probablement pas un evt
+	if ($reserved != 1699505740)
+	{
+		if ($debug)
+		{
+			print "Error found in file structure\nThe signature is $reserved\nStart searching for signature\n";
+		}
+		&signature_search($fichier,$debug);
+		# on se repositionne après la signature
+		seek $fichier,8,1;
+		
+	}
+	#decodage des dates
+	if ($localtime)
+	{
+		$gmgen=localtime($time_gen) . " localtime";
+		$gmwrit=localtime($time_writ) . " localtime";
+	}
+	else
+	{
+		$gmgen=gmtime($time_gen) . " GMT";
+		$gmwrit=gmtime($time_writ) . " GMT";	
+	}
+		
+	print "Record nb : $record_nb \n";
+	print "Time Generated : $gmgen\n";
+	print "Time Written : $gmwrit \n";
+	print "Evt ID : $event_id Evt type : $event_type Evt category : $evt_category \n";
+	if ($debug)
+	{
+		print "Reserved : $reserved\n"; 
+		print "Nb strings : $nb_strings\n";
+		print "String offset : $string_offset SID Len : $SID_leng SID offset : $SID_offset Data len: $data_len Data offset : $data_offset \n";
+	}
+
+	#on lit le reste du record, à savoir les program source,computer name, SID et autres strings
+	my $reste;
+	my $nbread=read $fichier , $reste , $longeur ;
+	if ($nbread < $longeur)
+	{
+		die ("End of file reached while reading strings\n");
+	}
+	$reste1 = pack "C*" , unpack "U0C*" , $reste;
+
+	my @liste = split /\0\0/,$reste1;
+	my $chaine;
+	$chaine = $liste[0];
+	# little hack to suppress unicode (if you find better that works, let me know
+	unless ($unicode) {$chaine =~ s/\0//g};
+	print "Program : $chaine\n";
+	$chaine = $liste[1];
+	unless ($unicode) {$chaine =~ s/\0//g};
+	print "Computer : $chaine\n";
+	my $i=0;
+	while ($i < $nb_strings)
+	{
+		$chaine=$liste[$i+2];
+		unless ($unicode) {$chaine =~ s/\0//g};
+		print "String $i : $chaine\n";
+		$i++;
+	}
+	print "\n\n";
+}
+
+
+
+
+# Paramètres par défaut
+my $debug=0;
+my $nomfichier="";
+my $localtime=0;
+my $unicode=0;
+
+# on processe la ligne de commande
+while ($argument = shift @ARGV)
+{
+	if ($argument eq "-d")
+	{
+		$debug=1;
+	}
+	elsif ($argument eq "-l")
+	{
+		$localtime=1;
+	}
+	elsif ($argument eq "-u")
+	{
+		$unicode=1;
+	}
+	elsif ($argument eq "-h")
+	{
+		&usage();
+	}
+	else
+	{
+		$nomfichier=$argument;
+	}
+}
+
+
+open FIC,"<",$nomfichier or die "Impossible d'ouvrir le fichier\n";
+binmode FIC;
+
+#On controle le format du fichier
+seek FIC,4,0;
+read FIC,my $dummy,4;
+if ($dummy ne "LfLe") { die ("Probably not an EVT file"); }
+
+#On recherche le premier record (j'arrive pas à décoder le header de ce foutu fichier)
+&signature_search(FIC,$debug);
+
+# on lit la suite du fichier
+my $record;
+while (read FIC,my $dword,4)
+{
+	# on lit la longeur du record
+	my $longeur=unpack "L" ,$dword;
+	# Un record fait au moins 56 bytes
+	if ($longeur > 51)
+	{
+		# on lit le record avec longeur -4 car on a déjà lu la taille dans un DWORD (4 bytes)
+		read FIC , $record , 52;
+		&explode ($record,FIC,$longeur-56,$debug,$localtime);
+	}
+	elsif ($longeur == 0)
+	{
+		exit 0;
+	}
+	else
+	{
+		# on cherche la signature suivante car on a un record special que j'ai pas pu décoder
+		# probablement le même type de record que le premier record du fichier
+		if ($debug)
+		{
+			my $posi=tell FIC;
+			print "Special record found at position : $posi\n";
+			print "Start seraching signature\n";
+		}
+		&signature_search(FIC,$debug);
+	}
+}
+close FIC;
+

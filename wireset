@@ -1,0 +1,11 @@
+#!/bin/bash
+
+/sbin/service network stop
+WIFIMOD=ipw2200
+echo "Removing $WIFIMOD"
+/sbin/rmmod $WIFIMOD
+sleep 1
+echo "Installing $WIFIMOD"
+/sbin/modprobe $WIFIMOD
+sleep 2
+/sbin/service network start

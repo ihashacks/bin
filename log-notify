@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+#	Written 20081011 by Brandon Pierce <brandon@ihashacks.com>
+#
+#		Reads the last line of a log file parsing out time stamps and other
+#	unused info
+#
+
+notify-send -t 3000 -i /usr/share/pixmaps/other/Dialog-warning4.png "`tail -n 1 /var/log/syslog | grep -v MARK | sed 's/^.*]\ //'`"

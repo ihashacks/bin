@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+#       Written 20041117 by Brandon Pierce <brandon@ihashacks.com>
+#
+#       Runs backup and log maintenance of MySQL
+#
+
+# Uncomment the next line for debugging
+# set -x
+
+TODAY=`date +%Y%m%d`
+MYSQL_BASE=/usr/local/mysql
+MYSQL_BIN=$MYSQL_BASE/bin
+DUMPDIR=/home/mysql/mysql_dump
+MYSQLDUMP="$MYSQL_BIN/mysqldump -u root --password= --flush-logs --opt"
+MYSQLCLI="$MYSQL_BIN/mysql -u root --password="
+
+# Delete dump directories older than 2 days
+for i in `find $DUMPDIR -type d -ctime +2 | grep -v -e '^\/home\/sparta\/mysql_dump$'` ; do 
+		echo "Deleting old dump $i"
+		rm -rf $i
+done
+
+# mkdir -p is needed in case you need to re-run the script the same day it \
+# fails. It will error and quit the script otherwise
+if [ -x $DUMPDIR/$TODAY ]; then
+	echo "Deleting stale dump for $TODAY"
+	rm -rf $DUMPDIR/$TODAY
+fi
+echo "Creating dump directory for $TODAY"
+mkdir -p $DUMPDIR/$TODAY
+
+# No need to backup all of the databases
+for db in {snort,nagios,mysql} ; do 
+	echo "Backing up $db and flushing logs."
+	$MYSQLDUMP $db > $DUMPDIR/$TODAY/$db.sqldump
+	echo "Completed $db"
+done
+
+# Binary logs need to be freed after every backup to maintain disk resources
+echo "Purging stale binary logs."
+LATESTBIN=`ls -l -t -r /usr/local/mysql/var/ | grep tarostar-bin | \
+		tail -n 1 | awk ' { print $9 } '`
+$MYSQLCLI -e "PURGE MASTER LOGS TO '$LATESTBIN'"

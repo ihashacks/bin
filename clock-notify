@@ -1,0 +1,59 @@
+#!/usr/bin/python
+# -*- coding: utf-8
+from calendar import monthcalendar
+from locale import setlocale, LC_TIME
+from os import execvp
+from time import strftime, localtime
+
+def get_weekdays():
+	weekdays = {}
+	for i in range(0, 7):
+		struct_time = [2006, 1, 1, 0, 0, 0, i, 1, -1]
+		weekdays[i] = strftime('%a', struct_time).capitalize()
+	return weekdays
+
+setlocale(LC_TIME, '')
+
+cyear = int(strftime('%Y'))
+cmonth = int(strftime('%m'))
+title = strftime('%x %X')
+sday = strftime('%A').capitalize()
+smon = strftime('%B').capitalize()
+sweek = strftime('%W')
+icon = "/usr/share/pixmaps/gnome-calendar.png"
+type = "device"
+cday = int(strftime('%d', localtime()))
+mc = monthcalendar(cyear, cmonth)
+
+weekdays = get_weekdays()
+
+message  = "\t<b>Day:</b>\t\t\t"+sday+"\n"
+message += "\t<b>Month:</b>\t\t\t"+smon+"\n"
+message += "\t<b>Week:</b>\t\t\t"+sweek+"\n"
+message += "\n"
+message += "\t   <u>"+weekdays[0]+"  "+weekdays[1]+"   "+weekdays[2]+"  "+weekdays[3]+"   "+weekdays[4]+"  <b>"+weekdays[5]+"  "+weekdays[6]+"</b></u>\n"
+
+for week in mc:
+	message += "\t"
+	for day in week:
+		if day == cday:
+			pre,post = ["<b><u>","</u></b>"]
+		else:
+			pre,post = ["", ""]
+		if (day == 0):
+			message += " "*8
+		elif (day < 10):
+			message += " "*6 + pre + `day` + post
+		else:
+			message += " "*4 + pre + `day` + post
+	message += "\n"
+
+args = [
+	'notify-send',
+	'--icon='+icon,
+	'--urgency=critical',
+	title,
+	message[:-1]]
+
+
+execvp("notify-send", args)

@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#	20101208 by Brandon Pierce <brandon@ihashacks.com>
+#
+#	Create some disk IO by creating and deleting large files
+#
+
+for i in `seq 1 10` ; do echo $i ; dd if=/dev/zero of=file.out bs=1024 count=1000000 ; sleep 10 ; rm file.out ; done

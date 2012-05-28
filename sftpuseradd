@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+#    20090209 Brandon Pierce <brandon@ihashacks.com>
+#
+#    Creates a new user allowed only sftp access
+#
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+#
+# Create user
+#
+echo -n "Username to create: "
+read newuser
+
+useradd -G sftponly -M -K UID_MIN=10000 -K GID_MIN=10000 -s /bin/false $newuser 
+
+if [ "$?" -gt 0 ]; then
+    echo "Error creating user"
+    exit 1;
+fi
+
+passwd $newuser
+
+USERHOME=/home/$newuser
+USERPUB=$USERHOME/pub
+
+# Create home directory owned by root 
+echo "Setting directory permissions for $newuser"
+
+set -e
+
+mkdir -p $USERHOME
+chown root:root $USERHOME
+chmod 755 $USERHOME
+
+# Create transfer directory
+mkdir -p $USERPUB
+chown $newuser:$newuser $USERPUB
+chmod 1777 $USERPUB

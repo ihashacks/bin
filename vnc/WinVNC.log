@@ -1,0 +1,33 @@
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncserver.cpp : authhosts cleared
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncproperties.cpp : clearing user settings
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncPasswd.h : PASSWD : FromClear called
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncproperties.cpp : loading DEFAULT local settings
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncproperties.cpp : loading "rudi" global settings
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncserver.cpp : KillAuthClients() done
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncserver.cpp : KillUnauthClients() done
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vsocket.cpp : shutdown socket
+ --Elk socketadres (protocol/netwerkadres/poort) kan normaal slechts één keer worden gebruikt.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vsocket.cpp : closing socket
+ --Een aanvraag om gegevens te verzenden of te ontvangen is niet toegestaan omdat de socket niet is verbonden en omdat (tijdens het verzenden op een datagramsocket via een sendto-aanroep) geen adres is opgegeven.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncPasswd.h : PASSWD : ToText called
+ --Een aanvraag om gegevens te verzenden of te ontvangen is niet toegestaan omdat de socket niet is verbonden en omdat (tijdens het verzenden op een datagramsocket via een sendto-aanroep) geen adres is opgegeven.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncpropertiesPoll.cpp : Reset Reg
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncpropertiesPoll.cpp : clearing user settings
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncpropertiesPoll.cpp : loading DEFAULT local settings
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncpropertiesPoll.cpp : loading "rudi" global settings
+ --De bewerking is voltooid.
+Mon Apr 17 16:08:14 2006
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncmenu.cpp : WM_QUERYENDSESSION
+ --De bewerking is voltooid.
+C:\c++\Z_Rel100\ultravnc\winvnc\winvnc\vncmenu.cpp : WM_ENDSESSION
+ --De bewerking is voltooid.

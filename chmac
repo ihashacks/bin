@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+#	20081116	Brandon Pierce <brandon@ihashacks.com>
+#
+#	Increments to the next valid MAC address for an interface,
+#	looping through all possible MAC addresses.
+#
+#	History:
+#
+#	-20081116 - Initial release
+#	-20081123 - 
+
+IF=eth1
+DEFMAC="00:15:00:1d:ca:ca"
+
+usage()
+{
+   	echo "Usage: `basename $0` [-i <interface>] [-m <mac address>] [-v verbose]"
+	echo -e "\t\t [-d default]"
+	exit 1
+}
+
+if [ ${#@} -eq 0 ]; then
+	usage
+fi
+
+default()
+{
+	echo "Setting mac address for $IF to default of $DEFMAC"
+	sudo /sbin/ifconfig $IF hw ether $DEFMAC
+	exit 0
+}
+
+manual()
+{
+	echo "Manually setting mac address for $IF to $MAC"
+	sudo /sbin/ifconfig $IF hw ether $MAC
+	exit 0
+}
+
+random()
+{
+	echo "Random feature not yet implemented"
+	exit 1
+}
+
+setintf()
+{
+	echo "Setting interface to $IF"
+	#IF="$OPTARG"
+}
+
+while getopts im:hvdr o
+do case "$o" in
+	i) IF="$OPTARG" && setintf;;
+	m) MAC="$OPTARG" && manual;;
+	h) usage;;
+	v) set -x;;
+	d) default;;
+	r) random;;
+esac
+done
+
+#
+# Use all but the last subscript of our current MAC to define our prefix
+# Set the last subscript to be our current MAC suffix
+#
+MACPFX=`/sbin/ifconfig $IF | grep HWaddr | awk ' { print $5 } ' | cut -c 1-14`
+MACSFX=`/sbin/ifconfig $IF | grep HWaddr | awk ' { print $5 } ' | \
+		awk -F: ' { print $6 } '`
+		
+#
+# Convert our current MAC suffix to base 10 for incrementing
+#
+DECSFX=`printf "%d\n" 0x$MACSFX`
+
+#
+# Increment the decimal value by 1 unless the total will exced 0xff,
+# otherwise it will reset to 1
+#
+if [ $(($DECSFX+1)) -lt "256" ]; then
+		DECSFX=$(($DECSFX+1));
+else
+		DECSFX=1;
+fi
+
+#
+# Convert our new suffix to base 16
+#
+NEWSFX=`printf "%02X\n" $DECSFX`
+
+#
+# Concatenate variables and update the interface
+#
+NEWMAC=`echo $MACPFX:$NEWSFX`
+echo "Setting mac address for $IF to $NEWMAC"
+sudo /sbin/ifconfig $IF hw ether $NEWMAC

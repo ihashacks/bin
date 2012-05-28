@@ -1,0 +1,85 @@
+#!/bin/bash
+
+################################################################################
+#	License
+################################################################################
+#
+#	Copyright (c) 2008, 2011 Brandon Pierce <brandon@ihashacks.com>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+################################################################################
+#	Changelog
+################################################################################
+#
+#	Written 20081222 by Brandon Pierce <brandon@ihashacks.com>
+#
+#       Checks the remainder of a Dell warranty using a service tag
+#
+#	Updated 20110318
+#
+#		Picks longest lasting warranty date when multiple warranty or 
+#		warranty types are listed
+#
+#	Updated 20110830
+#
+#		Included a link to the warranty site in the status output. Must have
+#		escape_html_tags=0 set in your cgi.cfg
+#
+#		Added timeout options to lynx to hopefully resolve false positive
+#		when the Dell site is slow to respond.
+#
+
+# Uncomment for debugging
+#set -x
+
+GET="lynx -connect_timeout=30 -read_timeout=30 -source"
+DURL="http://support.dell.com/support/topics/global.aspx/support/my_systems_info/details?c=us&l=en&s=gen&servicetag="
+SVCTAG=$1
+DWARN=$2
+DCRIT=$3
+
+usage()
+{
+	echo "Usage: `basename $0` <service tag> <warning days> <critical days>"
+	exit 1
+}
+
+if [ ${#@} -ne 3 ] ; then
+	usage
+fi
+
+DAYSLEFT=`$GET "$DURL$SVCTAG" | \
+	grep contract_table | \
+	grep -o -E ">[0-9]{1,3}<"`
+
+INTDAYS=`echo "$DAYSLEFT" | sed -e ' s/>// ; s/<// ' | uniq | sort -rn | head -n 1`
+
+#
+# Test it
+#
+if [ $INTDAYS -le "0" ]; then
+	echo "Warranty has expired for <a href=$DURL$SVCTAG>$SVCTAG</a>"
+	exit 2
+elif [ $INTDAYS -le $DCRIT ]; then
+	echo "Warranty expires in $INTDAYS days for <a href=$DURL$SVCTAG>$SVCTAG</a>"
+	exit 2
+elif [ $INTDAYS -le $DWARN ]; then
+	echo "Warranty expires in $INTDAYS days for <a href=$DURL$SVCTAG>$SVCTAG</a>"
+	exit 1
+else
+	echo "Warranty expires in $INTDAYS days for <a href=$DURL$SVCTAG>$SVCTAG</a>"
+	exit 0
+fi

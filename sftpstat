@@ -1,0 +1,9 @@
+#! /bin/bash
+#
+#	20090403 by Brandon Pierce <brandon@ihashacks.com>
+#
+#	Outputs the number of remotely connected SSH/SFTP users
+#
+
+echo "The number of SSH/SFTP connections is: " $( netstat -an | grep tcp | grep :22 | grep ESTABLISHED | grep -v "127.0.0.1" | wc -l )
+sudo -p "Enter password for %u: " netstat -pan | grep tcp | grep :22 | grep ESTABLISHED | grep -v "127.0.0.1"

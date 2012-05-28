@@ -1,0 +1,4 @@
+The installer can upgrade driver versions from RC18.
+
+The silent installer can not ask the user to reboot.
+In case a Pre-RC18 driver exist, the installer remove the old driver.  In that case you need to rerun the installer after reboot.

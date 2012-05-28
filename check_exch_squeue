@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+#	20081210 Brandon Pierce <brandon@ihashacks.com>
+#
+#	Checks the send queue size of an Exchange 2003 server for thresholds
+#
+
+#
+# Sample Nagios command.cfg definition
+#
+#	# 'check_exch_squeue' command definition
+#	define command {
+#		command_name	check_exch_squeue
+#		command_line	$USER1$/check_exch_squeue $HOSTADDRESS$ $ARG1$ $ARG2$
+#	}
+
+#
+# Sample Nagios host entry
+#
+#	define service {
+#		host_name				Delta
+#		service_description		Exchange Send Queue
+#		is_volatile             0
+#	    check_period            24x7
+#	    max_check_attempts      3
+#	    normal_check_interval   5
+#	    retry_check_interval    1
+#	    contact_groups          nagiosadmins
+#	    notification_interval   120
+#	    notification_period     24x7
+#	    notification_options    c,r
+#	    check_command           check_exch_squeue!15!25
+#	}
+
+
+CHKNT="/usr/lib/nagios/plugins/check_nt"
+PORT="12489"
+SRV=$1
+SWARN=$2
+SCRIT=$3
+
+#
+# Help/Usage
+#
+usage()
+{
+	echo "Usage: `basename $0` <server> <warning size> <critical size>"
+	exit 2
+}
+
+
+#
+# We need all siz command line parameters or fail
+#
+if [ ${#@} -lt 3 ]; then
+	usage
+fi
+
+#
+# Check send queue
+#
+
+SENDQ=`$CHKNT -H $SRV -p $PORT -v COUNTER -l "\\MSExchangeIS\SendQueueSize"`
+
+echo "Send: $SENDQ"
+
+#
+# If we don't have any usable data, throw a Nagios error rather than generic
+# script failure
+#
+if [ $SENDQ == "" ]; then
+	echo "Error retrieving data from Exchange"
+	exit 2
+fi
+
+
+#
+# Test it
+#
+if [ $SENDQ -ge $SCRIT ]; then
+	echo "Send queue is critical at $SENDQ messages"
+	exit 2
+elif [ $SENDQ -ge $SWARN ]; then
+	echo "Send queue is warned at $SENDQ messages"
+	exit 1
+else
+	echo "Send queue is within constraints at $SENDQ messages"
+	exit 0
+fi
