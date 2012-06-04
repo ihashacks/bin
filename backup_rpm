@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#  20120603 by Brandon Pierce <brandon@ihashacks.com>
+#
+#  simple installed RPM backup
+#
+
+rpm -qa --queryformat '%{NAME}\n'
