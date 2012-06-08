@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+#	Created 20120607 by Brandon Pierce <brandon@ihashacks.com>
+#
+#	Backup to Samba server based on day-of-week.
+#
+
+BKUPSERV=
+BKUPSRC="/etc /home /var/www"
+BKUPMNT=/tmp/$BKUPSERV
+BKUPDST=/tmp/$BKUPSERV/`hostname`
+BKUPDB="mysql"
+DAY=`date +%A`
+SMBCRED=/root/.smb-credentials
+RSYNCOPT="-x -a -v --delete"
+WRKGRP=
+
+# mount backup target, creating if needed
+if [ ! -d $BKUPMNT ] ; then
+  echo "Creating mount point for $BKUPMNT"
+  mkdir -p $BKUPMNT
+else
+  echo "Skipping mount point creation for $BKUPMNT"
+fi
+
+echo "Mounting $DAY backup on $BKUPSERV"
+mount -t cifs -o credentials=$SMBCRED,workgroup=$WRKGRP //$BKUPSERV/$DAY $BKUPMNT
+
+if [ ! -d $BKUPDST ] ; then
+  echo "Creating mount point for $BKUPDST"
+  mkdir -p $BKUPDST
+else
+  echo "Skipping mount point creation for $BKUPDST"
+fi
+
+# loop through backup directories
+for dir in $BKUPSRC ; do \
+  echo "Backing up $dir"; \
+  rsync $RSYNCOPT $dir $BKUPDST; \
+done
+
+# loop through MySQL databases
+for db in $BKUPDB ; do \
+  echo "Backing up MySQL database $db"; \
+  echo mysqldump $db > $BKUPDST/mysqldump-$db.sql; \
+done
+
+# backup installed package list
+if [ -e /etc/debian_version ]; then
+  echo "Backing up installed Debian package list"
+  dpkg --get-selections > $BKUPDST/installed-debs.txt
+elif [ -e /etc/redhat-release ] ; then
+  echo "Backing up installed RPM package list"
+  rpm -qa --queryformat '%{NAME}\n' > $BKUPDST/installed-rpms.txt
+else
+  echo "Unsupported or no package system available"
+fi
+
+# unmount backup target
+echo "Unmounting $DAY backup on $BKUPSERV"
+umount $BKUPMNT
