@@ -25,6 +25,7 @@ fi
 
 echo "Mounting $DAY backup on $BKUPSERV"
 mount -t cifs -o credentials=$SMBCRED,workgroup=$WRKGRP //$BKUPSERV/$DAY $BKUPMNT
+[ $? -gt 0 ] && exit 2;
 
 if [ ! -d $BKUPDST ] ; then
   echo "Creating mount point for $BKUPDST"
