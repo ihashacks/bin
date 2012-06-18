@@ -5,13 +5,11 @@
 #	20120317 - added Adobe Flash support
 #
 
-set -x
-
 ############################################################
 # variables
-OUTPUTBASE="/apps/Software"
+OUTPUTBASE="/apps/software"
 TMP="/tmp"
-#GET="echo wget"
+#GET="echo wget -nc"
 GET="wget -nc"
 
 ############################################################
@@ -33,7 +31,7 @@ adobe_flash()
 	FLASHVERFULL=`wget -q -O - https://www.adobe.com/products/flashplayer/distribution3.html | grep -m 1 -o -e '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'`
 	FLASHVERMAJOR=`echo $FLASHVERFULL | cut -d \. -f1`
 	FLASHOUT="$OUTPUTBASE/Adobe/Flash Player"
-	[ -e "$FLASHOUT" ] || mkdir "$FLASHOUT"
+	[ -e "$FLASHOUT" ] || mkdir -p "$FLASHOUT"
 	echo "Updating Adobe Flash $FLASHVERMAJOR to version $FLASHVERFULL..."
 	$GET -O "$FLASHOUT/install_flash_player_"$FLASHVERFULL"_active_x_32bit.msi" $FLASHBASEURL/install_flash_player_"$FLASHVERMAJOR"_active_x_32bit.msi
 	$GET -O "$FLASHOUT/install_flash_player_"$FLASHVERFULL"_active_x_64bit.msi" $FLASHBASEURL/install_flash_player_"$FLASHVERMAJOR"_active_x_64bit.msi
@@ -58,7 +56,7 @@ piriform_ccleaner()
 	CCVERFULL=`wget -q -O - http://www.piriform.com/ccleaner/builds | grep -o -e 'ccsetup[0-9]*\.zip' | grep -o -e '[0-9]*'`
 	CCVERMAJOR=`echo $CCVERFULL | cut -c 1`
 	CCOUT="$OUTPUTBASE/Piriform/CCleaner"
-	[ -e "$CCOUT" ] || mkdir "$CCOUT"
+	[ -e "$CCOUT" ] || mkdir -p "$CCOUT"
 	echo "Updating Piriform CCleaner $CCVERMAJOR to version $CCVERFULL..."
 	$GET -O "$TMP/ccsetup"$CCVERFULL".zip" $PFBASEURL/ccleaner/download/portable/downloadfile
 	unzip -q $TMP/ccsetup"$CCVERFULL".zip -d "$CCOUT"/ccsetup"$CCVERFULL"
@@ -72,7 +70,7 @@ piriform_defraggler()
 	DFVERFULL=`wget -q -O - http://www.piriform.com/defraggler/builds | grep -o -e 'dfsetup[0-9]*\.zip' | grep -o -e '[0-9]*'`
 	DFVERMAJOR=`echo $DFVERFULL | cut -c 1`
 	DFOUT="$OUTPUTBASE/Piriform/Defraggler"
-	[ -e "$DFOUT" ] || mkdir "$DFOUT"
+	[ -e "$DFOUT" ] || mkdir -p "$DFOUT"
 	echo "Updating Piriform Defraggler $DFVERMAJOR to version $DFVERFULL..."
 	$GET -O "$DFOUT/dfsetup"$DFVERFULL".zip" $PFBASEURL/defraggler/download/portable/downloadfile
 	echo
@@ -82,7 +80,7 @@ sysinternals_suite()
 {
 	SIBASEURL="http://download.sysinternals.com/files"
 	SIOUT="$OUTPUTBASE/Sysinternals"
-	[ -e "$SIOUT" ] || mkdir "$SIOUT"
+	[ -e "$SIOUT" ] || mkdir -p "$SIOUT"
 	echo "Updating SysInternals Suite..."
 	$GET -O "$SIOUT/SysinternalsSuite.zip" $SIBASEURL/SysinternalsSuite.zip
 	echo
