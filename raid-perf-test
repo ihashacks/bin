@@ -1,0 +1,106 @@
+#!/bin/bash
+
+################################################################################
+#	License
+################################################################################
+#
+#	Copyright (c) 2012 Brandon Pierce <brandon@ihashacks.com>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+################################################################################
+#	Changelog
+################################################################################
+#
+#	Written 20121122 by Brandon Pierce <brandon@ihashacks.com>
+#
+#       performs some simple disk write and read tests on software RAID volumes
+#		using various stripe_cache_size settings
+#
+
+################################################################################
+#	Documentation
+################################################################################
+#
+#		FIXME
+#
+
+# variables and such
+CACHESIZES=( 256 512 1024 2048 4096 8192 16384 32768 )
+COUNTER=1
+DEVICES=($(grep -v inactive /proc/mdstat | grep ^md | cut -d ' ' -f 1))
+MEM=$(free | grep ^M | awk ' { print $2 } ')
+NUMTESTS=2
+STEPDEV=0
+STEPSTRIPE=0
+DISKFREE=$(df --sync -k -P `pwd` | grep ^/ | awk ' { print $4 } ')
+DISKNEED=$((MEM * 4))
+TESTSIZE=$((MEM * 2 / 1024))
+
+# make sure we have at least 1 device to test
+if [ ! $DEVICES ]
+	then
+		echo "there are no active devices to test"
+		exit 1
+fi
+
+# make sure we have enough disk space for our test files
+if [ $DISKFREE -le $DISKNEED ]
+	then
+		echo "there is not enough free space to continue"
+		echo -e "total memory:\t\t	$MEM"
+		echo -e "test size:\t		$TESTSIZE"
+		echo -e "disk free:\t		$DISKFREE"
+		echo -e "disk needed:\t		$DISKNEED"
+		exit 2
+fi
+
+# loop through the devices
+while [ $STEPDEV -lt ${#DEVICES[@]} ]; do
+	echo "testing ${DEVICES[$STEPDEV]}..."
+	CACHEDEV=/sys/block/${DEVICES[$STEPDEV]}/md/stripe_cache_size
+	CACHEORIG=$(cat $CACHEDEV)
+	while [ $STEPSTRIPE -lt ${#CACHESIZES[@]} ]; do
+		# set the new cache size
+		echo ${CACHESIZES[$STEPSTRIPE]} > $CACHEDEV
+		# write test
+		while [ $COUNTER -le $NUMTESTS ]; do
+			echo -n "running write test $COUNTER for stripe_cache_size ${CACHESIZES[$STEPSTRIPE]}... "
+			sync
+			echo 3 > /proc/sys/vm/drop_caches
+			dd if=/dev/zero of=foo.$COUNTER bs=1M count=$TESTSIZE 2>&1 | grep -oE '\(.*'
+			COUNTER=$((COUNTER + 1))
+		done
+		COUNTER=1
+		# read test
+		while [ $COUNTER -le $NUMTESTS ]; do
+			echo -n "running read test $COUNTER for stripe_cache_size ${CACHESIZES[$STEPSTRIPE]}... "
+			sync
+			echo 3 > /proc/sys/vm/drop_caches
+			dd if=foo.$COUNTER of=/dev/null bs=1M count=$TESTSIZE 2>&1 | grep -oE '\(.*'
+			COUNTER=$((COUNTER + 1))
+		done
+		COUNTER=1
+		# delete test files as write vs. overwrite skews results as cache increases
+		for i in `seq 1 $NUMTESTS` ; do
+			rm foo.$i ;
+		done
+		STEPSTRIPE=$((STEPSTRIPE + 1))
+	done
+	# undo what we just did
+	echo "resetting stripe_cache_size to $CACHEORIG"
+	echo $CACHEORIG > $CACHEDEV
+	STEPDEV=$((STEPDEV + 1))
+done
