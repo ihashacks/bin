@@ -97,8 +97,6 @@ while [ $STEPDEV -lt ${#DEVICES[@]} ]; do
 		for i in `seq 1 $NUMTESTS` ; do
 			rm foo.$i ;
 		done
-		# some systems seem to choke after extended testing. sleeping helps
-		sleep 10
 		STEPSTRIPE=$((STEPSTRIPE + 1))
 	done
 	# undo what we just did
