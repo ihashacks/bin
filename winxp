@@ -1,5 +1,0 @@
-#!/bin/bash
-
-mount -t tmpfs -o size=1040m non /dev/shm
-/usr/local/bin/qemu -M pc -m 512 -net nic,vlan=0 -net user,vlan=0,e=emu -monitor pty -hda WinXp.img -monitor stdio -kernel-kqemu -no-acpi
-umount /dev/shm

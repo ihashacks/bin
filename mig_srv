@@ -1,9 +1,0 @@
-#! /bin/csh
-foreach f (`find . -name \*cfg -print`)
-echo processing $f ...
-ex $f <<EOD
-1,\$s.Hawaii.Rohan.
-w
-q
-EOD
-end
