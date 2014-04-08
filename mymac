@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-#	20081116 Brandon Pierce <brandon@ihashacks.com>
-#
-#	Outputs current local MAC addresses
-#
-
-/sbin/ifconfig $1 | grep HWaddr | awk ' { print $1, $5 } '

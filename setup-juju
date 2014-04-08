@@ -47,6 +47,6 @@ if [ ! -r $HOME/.ssh/id_rsa ]; then
 fi
 
 mkdir .juju
-vim $HOME/.juju/environments.yaml
+sensible-editor $HOME/.juju/environments.yaml
 
 juju bootstrap

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-awk ' { print $10 ", " $11 } ' $1 | sort | uniq

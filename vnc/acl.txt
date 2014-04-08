@@ -1,1 +1,0 @@
-allow	0x00000003	BUILTIN\Administrators

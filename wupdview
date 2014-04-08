@@ -1,3 +1,0 @@
-#!/bin/bash
-
-awk -F\\t ' { print $1 ", " $2 ", " $6 } ' WindowsUpdate.log | grep ^2008-04-23 | less

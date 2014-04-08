@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-#	20080705 Brandon Pierce <brandon@ihashacks.com>
-#
-
-while [ 1 ] ; do \
-	$1 ; \
-done
